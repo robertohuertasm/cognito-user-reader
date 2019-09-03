@@ -1,0 +1,5 @@
+/target
+**/*.rs.bk
+cognito_users.csv
+.idea
+.DS_store
