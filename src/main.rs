@@ -55,10 +55,10 @@ fn main() -> std::io::Result<()> {
     let content_file = users
         .iter()
         .filter(|&u| {
-            if !cli.show_unconfirmed {
-                u.user_status != "UNCONFIRMED"
-            } else {
+            if cli.show_unconfirmed {
                 true
+            } else {
+                u.user_status != "UNCONFIRMED"
             }
         })
         .filter(|&u| {
@@ -70,7 +70,7 @@ fn main() -> std::io::Result<()> {
         })
         .filter(|&u| {
             if let Some(ref avoid) = cli.filtered_user_emails {
-                let is_in = avoid.contains(&get_email(&u));
+                let is_in = avoid.contains(&get_email(u));
                 return if cli.include_user_emails {
                     is_in
                 } else {
@@ -111,7 +111,7 @@ fn main() -> std::io::Result<()> {
 
     let path = current_dir.join("cognito_users.csv");
     let mut file = std::fs::File::create(path.clone())?;
-    file.write_all(&content_file.as_bytes())?;
+    file.write_all(content_file.as_bytes())?;
     println!(
         "{} {}",
         TREE,
