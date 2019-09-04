@@ -1,6 +1,18 @@
 # Cognito User Reader
 
+[![Build Status](https://travis-ci.org/robertohuertasm/cognito-user-reader.svg?branch=master)](https://travis-ci.org/robertohuertasm/cognito-user-reader) [![Crates.io](https://img.shields.io/crates/v/cognito-user-reader.svg)](https://crates.io/crates/cognito-user-reader)
+
 This small utility will fetch all the users and emails from a Cognito User Pool of your choice and print a nice file for you.
+
+## Installation
+
+You can compile it yourself:
+
+```sh
+cargo install cognito-user-reader
+```
+
+or you can download the executable from [Github releases](https://github.com/robertohuertasm/cognito-user-reader/releases) and add it to your path.
 
 ## Requirements
 
@@ -15,9 +27,7 @@ pip install awscli
 First of all, you have to use `assure-role` in order to access `aws`:
 
 ```bash
-assure-role prod
-#or
-assure-role stg
+assure-role your-env
 ```
 
 Then, just execute: 

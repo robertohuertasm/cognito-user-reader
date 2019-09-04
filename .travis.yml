@@ -18,7 +18,7 @@ before_script:
   - rustup component add clippy-preview
 script:
   - cargo fmt --all -- --check
-  - if [[ "$TRAVIS_OS_NAME" != "windows" ]]; then cargo clippy --all -- -D clippy::pedantic ; fi
+  - cargo clippy --all -- -D clippy::pedantic -D clippy::nursery -D warnings
   - cargo build --release
   - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then chmod +x target/release/cur.exe ; fi
   - if [[ "$TRAVIS_OS_NAME" != "windows" ]]; then chmod +x target/release/cur ; fi
@@ -28,13 +28,17 @@ script:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then mv target/release/cur.gz cur_osx.gz ; fi
   - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then mv target/release/cur.exe.gz cur_windows.gz ; fi
 deploy:
-  # if: tag IS present
-  provider: releases
-  api_key: $gh_key
-  file:
-    - cur_linux.gz
-    - cur_osx.gz
-    - cur_windows.gz
-  skip_cleanup: true
-  on:
-    tags: true
+  - provider: releases
+    api_key: $gh_key
+    file:
+      - cur_linux.gz
+      - cur_osx.gz
+      - cur_windows.gz
+    skip_cleanup: true
+    on:
+      tags: true
+  - provider: script
+    script: bash .travis/deploy.sh
+    skip_cleanup: true
+    on:
+      tags: true

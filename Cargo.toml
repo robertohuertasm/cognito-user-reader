@@ -4,9 +4,21 @@ description = "Utility to retrieve all users in a specific AWS user pool"
 version = "0.1.0"
 authors = ["Roberto Huertas <roberto.huertas@outlook.com>"]
 edition = "2018"
+license = "MIT"
+repository = "https://github.com/robertohuertasm/cognito-user-reader"
+readme = "README.md"
+keywords = ["cli", "aws", "cognito"]
+categories = ["web-programming::http-server", "network-programming"]
+
+exclude = [
+  ".travis/*",
+  ".travis.yml",
+  ".pre-commit-config.yaml"
+]
 
 [badges]
 maintenance = { status = "actively-developed" }
+travis-ci = { repository = "robertohuertasm/cognito-user-reader", branch = "master" }
 
 [[bin]]
 name = "cur"
