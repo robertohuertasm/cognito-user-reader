@@ -12,7 +12,7 @@ You can compile it yourself:
 cargo install cognito-user-reader
 ```
 
-or you can download the executable from [Github releases](https://github.com/robertohuertasm/cognito-user-reader/releases) and add it to your path.
+or you can download the executable from [GitHub releases](https://github.com/robertohuertasm/cognito-user-reader/releases) and add it to your path.
 
 ## Requirements
 
@@ -24,10 +24,10 @@ pip install awscli
 
 ## Usage
 
-First of all, you have to use `assure-role` in order to access `aws`:
+First of all, you have to use `assume-role` in order to access `aws`:
 
 ```bash
-assure-role your-env
+assume-role your-env
 ```
 
 Then, just execute: 
