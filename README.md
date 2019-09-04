@@ -1,7 +1,5 @@
 # Cognito User Reader
 
-[![Actions Status](https://github.com/robertohuertasm/cognito-user-reader/workflows/Rust/badge.svg)](https://github.com/robertohuertasm/cognito-user-reader/actions)
-
 This small utility will fetch all the users and emails from a Cognito User Pool of your choice and print a nice file for you.
 
 ## Requirements
