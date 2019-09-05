@@ -24,7 +24,7 @@ pip install awscli
 
 ## Usage
 
-First of all, you have to use `assume-role` in order to access `aws`:
+Depending on how you have configured `AWS`, you may need to use something similar to `assume-role` before using `cur` in order to access the data:
 
 ```bash
 assume-role your-env
