@@ -57,7 +57,7 @@ dependencies = [
 
 [[package]]
 name = "cognito-user-reader"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "console 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.99 (registry+https://github.com/rust-lang/crates.io-index)",

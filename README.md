@@ -16,7 +16,7 @@ or you can download the executable from [GitHub releases](https://github.com/rob
 
 ## Requirements
 
-You need to have previously uninstalled [awscli](https://aws.amazon.com/cli/).
+You need to have previously installed [awscli](https://aws.amazon.com/cli/).
 
 ```python
 pip install awscli
