@@ -32,7 +32,6 @@ jobs:
           rust-version: ${{ matrix.rust }}
       - name: Checkout
         uses: actions/checkout@v1
-
       - name: Build the crate for release
         run: |
           cargo build --release
@@ -60,12 +59,17 @@ jobs:
           file: ${{ matrix.release_name }}
           asset_name: ${{ matrix.release_name }}
           tag: ${{github.ref}}
+  crates:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Rust
+        uses: hecrj/setup-rust-action@master
+        with:
+          rust-version: ${{ matrix.rust }}
+      - name: Checkout
+        uses: actions/checkout@v1
       - name: Publish to crates.io
-        shell: bash
         run: |
-          if [[ "${{matrix.os}}" == "ubuntu-latest" ]]
-          then
-              git stash --all
-              cargo login ${{secrets.crates_key}}
-              cargo publish
-          fi
+          cargo login ${{secrets.crates_key}}
+          cargo publish
