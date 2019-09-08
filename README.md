@@ -1,6 +1,6 @@
 # Cognito User Reader
 
-[![Build Status](https://travis-ci.org/robertohuertasm/cognito-user-reader.svg?branch=master)](https://travis-ci.org/robertohuertasm/cognito-user-reader) [![Crates.io](https://img.shields.io/crates/v/cognito-user-reader.svg)](https://crates.io/crates/cognito-user-reader)
+[![ActionsStatus](https://github.com/robertohuertasm/cognito-user-reader/workflows/Build/badge.svg)](https://github.com/robertohuertasm/cognito-user-reader/actions) [![Crates.io](https://img.shields.io/crates/v/cognito-user-reader.svg)](https://crates.io/crates/cognito-user-reader)
 
 This small utility will fetch all the users and emails from a Cognito User Pool of your choice and print a nice file for you.
 
