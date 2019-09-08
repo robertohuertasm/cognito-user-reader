@@ -18,9 +18,24 @@ fn main() -> std::io::Result<()> {
     let current_dir = env::current_dir().unwrap();
     let mut pagination_token: Option<String> = None;
     let mut users: Vec<User> = Vec::new();
-
+    let mut limit: Option<u32> = None;
+    let mut pending_users: u32 = 0;
+    if let Some(max_users) = cli.max_number_users {
+        if max_users <= 60 {
+            limit = Some(max_users);
+        } else {
+            limit = Some(60);
+            pending_users = max_users - 60;
+        }
+    }
     loop {
-        match get_users(&cli.pool_id, &cli.region, &pagination_token) {
+        match get_users(
+            &cli.pool_id,
+            &cli.region,
+            &pagination_token,
+            limit,
+            cli.show_unconfirmed,
+        ) {
             Ok(mut info) => {
                 println!(
                     "{} {} {}",
@@ -45,6 +60,18 @@ fn main() -> std::io::Result<()> {
             }
         }
 
+        if pending_users == 0 && limit.is_some() {
+            break;
+        }
+
+        if pending_users <= 60 {
+            limit = Some(pending_users);
+            pending_users = 0;
+        } else {
+            limit = Some(60);
+            pending_users -= 60;
+        }
+
         if pagination_token.is_none() {
             break;
         }
@@ -54,13 +81,6 @@ fn main() -> std::io::Result<()> {
 
     let content_file = users
         .iter()
-        .filter(|&u| {
-            if cli.show_unconfirmed {
-                true
-            } else {
-                u.user_status != "UNCONFIRMED"
-            }
-        })
         .filter(|&u| {
             if let Some(ref avoid) = cli.filtered_user_ids {
                 let is_in = avoid.contains(&u.username);
@@ -132,6 +152,8 @@ fn get_users(
     pool_id: &str,
     region: &str,
     pagination_token: &Option<String>,
+    limit: Option<u32>,
+    show_unconfirmed: bool,
 ) -> Result<UserInfo, String> {
     let mut cmd = Command::new("aws");
     cmd.arg("cognito-idp")
@@ -143,8 +165,19 @@ fn get_users(
         .arg("--region")
         .arg(region);
 
+    if !show_unconfirmed {
+        cmd.arg("--filter").arg("cognito:user_status = 'CONFIRMED'");
+    }
+
     if let Some(pt) = pagination_token {
         cmd.arg("--pagination-token").arg(pt);
+    }
+
+    if let Some(l) = limit {
+        if l > 60 {
+            return Err("The limit cannot be greater than 60".to_string());
+        }
+        cmd.arg("--limit").arg(l.to_string());
     }
 
     let result = cmd

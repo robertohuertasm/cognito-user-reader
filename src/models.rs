@@ -22,6 +22,9 @@ pub struct Cli {
     /// Only the filtered emails will be displayed
     #[structopt(short = "m", long)]
     pub include_user_emails: bool,
+    /// Max number of users returned
+    #[structopt(short = "x", long)]
+    pub max_number_users: Option<u32>,
     /// Output the result to the terminal
     #[structopt(short, long)]
     pub print_screen: bool,
