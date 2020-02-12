@@ -1,3 +1,4 @@
+#![allow(clippy::cast_possible_truncation)]
 mod models;
 
 use chrono::prelude::*;
@@ -14,8 +15,6 @@ static ROCKET: Emoji<'_, '_> = Emoji("\u{1F680}", "");
 static THUMB: Emoji<'_, '_> = Emoji("\u{1F44D}", "");
 static TREE: Emoji<'_, '_> = Emoji("\u{1F335}", "");
 
-#[allow(clippy::too_many_lines)]
-#[allow(clippy::cast_possible_truncation)]
 fn main() -> std::io::Result<()> {
     let cli: Cli = Cli::from_args();
     let current_dir = env::current_dir().unwrap();
@@ -51,7 +50,7 @@ fn main() -> std::io::Result<()> {
                     ROCKET
                 );
                 pagination_token = info.pagination_token;
-                users.append(&mut info.users)
+                users.append(&mut info.users);
             }
             Err(e) => {
                 println!(
@@ -61,7 +60,6 @@ fn main() -> std::io::Result<()> {
                     ERROR,
                     style(e).red(),
                 );
-                return Ok(());
             }
         }
 
@@ -82,50 +80,7 @@ fn main() -> std::io::Result<()> {
         }
     }
 
-    let mut filtered_len = 0;
-
-    let content_file = users
-        .iter()
-        .filter(|&u| {
-            if let Some(ref avoid) = cli.filtered_user_ids {
-                let is_in = avoid.contains(&u.username);
-                return if cli.include_user_ids { is_in } else { !is_in };
-            }
-            true
-        })
-        .filter(|&u| {
-            if let Some(ref avoid) = cli.filtered_user_emails {
-                let is_in = avoid.contains(&get_email(u));
-                return if cli.include_user_emails {
-                    is_in
-                } else {
-                    !is_in
-                };
-            }
-            true
-        })
-        .fold("createdAt, id, email, status".to_owned(), |acc, u| {
-            let email = get_email(u);
-            let creation_date = Utc.timestamp(u.user_create_date as i64, 0);
-            if cli.print_screen {
-                println!(
-                    "{} | {} | {} | {}",
-                    style(creation_date).red(),
-                    style(&u.username).green(),
-                    &email,
-                    style(&u.user_status).yellow()
-                );
-            }
-            filtered_len += 1;
-            format!(
-                "{}\n{}",
-                acc,
-                format!(
-                    "{}, {}, {}, {}",
-                    creation_date, u.username, &email, u.user_status
-                )
-            )
-        });
+    let (content_file, filtered_len) = get_content(&users, &cli);
 
     println!(
         "{}",
@@ -149,6 +104,54 @@ fn main() -> std::io::Result<()> {
     );
 
     Ok(())
+}
+
+fn get_content(users: &[User], cli: &Cli) -> (String, i32) {
+    let mut filtered_len = 0;
+    let content = users
+        .iter()
+        .filter(|&u| {
+            if let Some(ref avoid) = cli.filtered_user_ids {
+                let is_in = avoid.contains(&u.username);
+                return if cli.include_user_ids { is_in } else { !is_in };
+            }
+            true
+        })
+        .filter(|&u| {
+            if let Some(ref avoid) = cli.filtered_user_emails {
+                let is_in = avoid.contains(&get_email(u));
+                return if cli.include_user_emails {
+                    is_in
+                } else {
+                    !is_in
+                };
+            }
+            true
+        })
+        .fold("createdAt, id, email, status".to_owned(), |acc, u| {
+            let email = get_email(u);
+
+            let creation_date = Utc.timestamp(u.user_create_date as i64, 0);
+            if cli.print_screen {
+                println!(
+                    "{} | {} | {} | {}",
+                    style(creation_date).red(),
+                    style(&u.username).green(),
+                    &email,
+                    style(&u.user_status).yellow()
+                );
+            }
+            filtered_len += 1;
+            format!(
+                "{}\n{}",
+                acc,
+                format!(
+                    "{}, {}, {}, {}",
+                    creation_date, u.username, &email, u.user_status
+                )
+            )
+        });
+    (content, filtered_len)
 }
 
 fn get_email(user: &User) -> String {
