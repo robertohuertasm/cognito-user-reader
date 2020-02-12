@@ -1,5 +1,6 @@
 mod models;
 
+use chrono::prelude::*;
 use console::style;
 use console::Emoji;
 use models::{Cli, User, UserInfo};
@@ -13,6 +14,8 @@ static ROCKET: Emoji<'_, '_> = Emoji("\u{1F680}", "");
 static THUMB: Emoji<'_, '_> = Emoji("\u{1F44D}", "");
 static TREE: Emoji<'_, '_> = Emoji("\u{1F335}", "");
 
+#[allow(clippy::too_many_lines)]
+#[allow(clippy::cast_possible_truncation)]
 fn main() -> std::io::Result<()> {
     let cli: Cli = Cli::from_args();
     let current_dir = env::current_dir().unwrap();
@@ -20,6 +23,7 @@ fn main() -> std::io::Result<()> {
     let mut users: Vec<User> = Vec::new();
     let mut limit: Option<u32> = None;
     let mut pending_users: u32 = 0;
+
     if let Some(max_users) = cli.max_number_users {
         if max_users <= 60 {
             limit = Some(max_users);
@@ -28,6 +32,7 @@ fn main() -> std::io::Result<()> {
             pending_users = max_users - 60;
         }
     }
+
     loop {
         match get_users(
             &cli.pool_id,
@@ -99,11 +104,13 @@ fn main() -> std::io::Result<()> {
             }
             true
         })
-        .fold("id, email, status".to_owned(), |acc, u| {
+        .fold("createdAt, id, email, status".to_owned(), |acc, u| {
             let email = get_email(u);
+            let creation_date = Utc.timestamp(u.user_create_date as i64, 0);
             if cli.print_screen {
                 println!(
-                    "{} | {} | {}",
+                    "{} | {} | {} | {}",
+                    style(creation_date).red(),
                     style(&u.username).green(),
                     &email,
                     style(&u.user_status).yellow()
@@ -113,7 +120,10 @@ fn main() -> std::io::Result<()> {
             format!(
                 "{}\n{}",
                 acc,
-                format!("{}, {}, {}", u.username, &email, u.user_status)
+                format!(
+                    "{}, {}, {}, {}",
+                    creation_date, u.username, &email, u.user_status
+                )
             )
         });
 
@@ -144,8 +154,7 @@ fn main() -> std::io::Result<()> {
 fn get_email(user: &User) -> String {
     user.attributes
         .first()
-        .and_then(|x| Some(x.value.clone()))
-        .unwrap_or_else(|| "None".to_owned())
+        .map_or_else(|| "None".to_owned(), |x| x.value.clone())
 }
 
 fn get_users(
