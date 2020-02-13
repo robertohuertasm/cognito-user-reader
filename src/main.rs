@@ -113,6 +113,38 @@ fn main() -> std::io::Result<()> {
     Ok(())
 }
 
+fn get_content(users: &[User], cli: &Cli) -> (String, i32) {
+    let mut filtered_len = 0;
+    let content = users
+        .iter()
+        .filter(filter_by_user_id(cli))
+        .filter(filter_by_user_emails(cli))
+        .filter(filter_by_creation_date(cli))
+        .fold("createdAt, id, email, status".to_owned(), |acc, u| {
+            let email = get_email(u);
+            let creation_date = u.creation_date();
+            if cli.print_screen {
+                println!(
+                    "{} | {} | {} | {}",
+                    style(creation_date).red(),
+                    style(&u.username).green(),
+                    &email,
+                    style(&u.user_status).yellow()
+                );
+            }
+            filtered_len += 1;
+            format!(
+                "{}\n{}",
+                acc,
+                format!(
+                    "{}, {}, {}, {}",
+                    creation_date, u.username, &email, u.user_status
+                )
+            )
+        });
+    (content, filtered_len)
+}
+
 #[allow(clippy::needless_lifetimes)]
 fn filter_by_user_id<'a>(cli: &'a Cli) -> impl FnMut(&&'a User) -> bool {
     move |&u| {
@@ -139,40 +171,15 @@ fn filter_by_user_emails<'a>(cli: &'a Cli) -> impl FnMut(&&'a User) -> bool {
     }
 }
 
-fn get_content(users: &[User], cli: &Cli) -> (String, i32) {
-    let mut filtered_len = 0;
-    let content = users
-        .iter()
-        .filter(filter_by_user_id(cli))
-        .filter(filter_by_user_emails(cli))
-        // .filter(|&u| {
-        //     let limit = Utc.ymd(2020, 2, 10).and_hms(0, 0, 0);
-        //     let duration = u.creation_date().signed_duration_since(limit);
-        //     duration.num_days() >= 0
-        // })
-        .fold("createdAt, id, email, status".to_owned(), |acc, u| {
-            let email = get_email(u);
-            let creation_date = u.creation_date();
-            if cli.print_screen {
-                println!(
-                    "{} | {} | {} | {}",
-                    style(creation_date).red(),
-                    style(&u.username).green(),
-                    &email,
-                    style(&u.user_status).yellow()
-                );
-            }
-            filtered_len += 1;
-            format!(
-                "{}\n{}",
-                acc,
-                format!(
-                    "{}, {}, {}, {}",
-                    creation_date, u.username, &email, u.user_status
-                )
-            )
-        });
-    (content, filtered_len)
+#[allow(clippy::needless_lifetimes)]
+fn filter_by_creation_date<'a>(cli: &'a Cli) -> impl FnMut(&&'a User) -> bool {
+    move |&u| {
+        if let Some(created_at) = cli.created_at {
+            let duration = u.creation_date().signed_duration_since(created_at);
+            return duration.num_days() >= 0;
+        }
+        true
+    }
 }
 
 fn get_email(user: &User) -> String {

@@ -1,4 +1,5 @@
 use chrono::prelude::*;
+use console::style;
 use serde::Deserialize;
 use structopt::StructOpt;
 
@@ -32,6 +33,26 @@ pub struct Cli {
     /// Show the unconfirmed accounts, too
     #[structopt(short, long)]
     pub show_unconfirmed: bool,
+    /// Date to filter the users by creation date (yyyy-mm-dd)
+    #[structopt(short, long, parse(from_str = parse_date))]
+    pub created_at: Option<DateTime<Utc>>,
+}
+
+#[allow(clippy::cast_possible_wrap)]
+fn parse_date(src: &str) -> DateTime<Utc> {
+    let parsed = src
+        .split('-')
+        .filter_map(|x| x.parse::<u32>().ok())
+        .collect::<Vec<_>>();
+
+    if parsed.len() != 3 {
+        let error_msg = "Review the creation date paramater. Use YYYY-MM-DD. eg. 2020-02-23";
+        println!("{}", style(error_msg).red());
+        panic!(error_msg);
+    }
+
+    Utc.ymd(parsed[0] as i32, parsed[1], parsed[2])
+        .and_hms(23, 59, 59)
 }
 
 #[derive(Debug, Deserialize)]
