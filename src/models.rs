@@ -1,3 +1,4 @@
+use chrono::prelude::*;
 use serde::Deserialize;
 use structopt::StructOpt;
 
@@ -49,6 +50,12 @@ pub struct User {
     pub user_last_modified_date: f32,
     pub enabled: bool,
     pub user_status: String,
+}
+
+impl User {
+    pub fn creation_date(&self) -> DateTime<Utc> {
+        Utc.timestamp(self.user_create_date as i64, 0)
+    }
 }
 
 #[derive(Debug, Deserialize)]

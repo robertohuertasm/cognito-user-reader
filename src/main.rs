@@ -1,7 +1,7 @@
 #![allow(clippy::cast_possible_truncation)]
 mod models;
 
-use chrono::prelude::*;
+// use chrono::prelude::*;
 use console::style;
 use console::Emoji;
 use models::{Cli, User, UserInfo};
@@ -32,6 +32,7 @@ fn main() -> std::io::Result<()> {
         }
     }
 
+    // loop until we get all the users that we want
     loop {
         match get_users(
             &cli.pool_id,
@@ -80,8 +81,13 @@ fn main() -> std::io::Result<()> {
         }
     }
 
+    // order by creation date
+    users.sort_by(|a, b| a.user_create_date.partial_cmp(&b.user_create_date).unwrap());
+
+    // get the list of users in form of a string and the filtered users count
     let (content_file, filtered_len) = get_content(&users, &cli);
 
+    // inform the user about how many users where found and filtered
     println!(
         "{}",
         style(format!(
@@ -94,6 +100,7 @@ fn main() -> std::io::Result<()> {
         .blue()
     );
 
+    // export the list of users into a file
     let path = current_dir.join("cognito_users.csv");
     let mut file = std::fs::File::create(path.clone())?;
     file.write_all(content_file.as_bytes())?;
@@ -106,32 +113,46 @@ fn main() -> std::io::Result<()> {
     Ok(())
 }
 
+#[allow(clippy::needless_lifetimes)]
+fn filter_by_user_id<'a>(cli: &'a Cli) -> impl FnMut(&&'a User) -> bool {
+    move |&u| {
+        if let Some(ref avoid) = cli.filtered_user_ids {
+            let is_in = avoid.contains(&u.username);
+            return if cli.include_user_ids { is_in } else { !is_in };
+        }
+        true
+    }
+}
+
+#[allow(clippy::needless_lifetimes)]
+fn filter_by_user_emails<'a>(cli: &'a Cli) -> impl FnMut(&&'a User) -> bool {
+    move |&u| {
+        if let Some(ref avoid) = cli.filtered_user_emails {
+            let is_in = avoid.contains(&get_email(u));
+            return if cli.include_user_emails {
+                is_in
+            } else {
+                !is_in
+            };
+        }
+        true
+    }
+}
+
 fn get_content(users: &[User], cli: &Cli) -> (String, i32) {
     let mut filtered_len = 0;
     let content = users
         .iter()
-        .filter(|&u| {
-            if let Some(ref avoid) = cli.filtered_user_ids {
-                let is_in = avoid.contains(&u.username);
-                return if cli.include_user_ids { is_in } else { !is_in };
-            }
-            true
-        })
-        .filter(|&u| {
-            if let Some(ref avoid) = cli.filtered_user_emails {
-                let is_in = avoid.contains(&get_email(u));
-                return if cli.include_user_emails {
-                    is_in
-                } else {
-                    !is_in
-                };
-            }
-            true
-        })
+        .filter(filter_by_user_id(cli))
+        .filter(filter_by_user_emails(cli))
+        // .filter(|&u| {
+        //     let limit = Utc.ymd(2020, 2, 10).and_hms(0, 0, 0);
+        //     let duration = u.creation_date().signed_duration_since(limit);
+        //     duration.num_days() >= 0
+        // })
         .fold("createdAt, id, email, status".to_owned(), |acc, u| {
             let email = get_email(u);
-
-            let creation_date = Utc.timestamp(u.user_create_date as i64, 0);
+            let creation_date = u.creation_date();
             if cli.print_screen {
                 println!(
                     "{} | {} | {} | {}",
