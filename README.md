@@ -33,7 +33,7 @@ assume-role your-env
 Then, just execute: 
 
 ```bash
-cur <pool_id> [-r eu-west-1] [-p] [-s] [-i "id1" "id2"] [-e "a@email.com" "b@email.com"] [-n] [-m] [-x]
+cur <pool_id> [-r eu-west-1] [-p] [-s] [-i "id1" "id2"] [-e "a@email.com" "b@email.com"] [-n] [-m] [-x 20] [-c 2020-02-10]
 ```
 
 You will see a new `cognito_users.csv` file in your working directory with all your user's emails.
@@ -50,3 +50,4 @@ If you want to learn more about the options of this `cli` just execute `cur -h`.
 * `-n`: Inverts the userId filter
 * `-m`: Inverts the user email filter
 * `-x`: Max number of users to retrieve
+* `-c`: Only shows users created from this date
