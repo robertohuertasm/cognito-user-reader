@@ -4,7 +4,18 @@ use console::style;
 use structopt::StructOpt;
 
 #[derive(StructOpt, PartialEq, Debug)]
-#[structopt(author, about)]
+#[structopt(
+    name("🌇  Cognito User Reader CLI - CUR"),
+    author("💻  Roberto Huertas <roberto.huertas@outlook.com>"),
+    long_about("🧰  Utility to retrieve all users in a specific AWS user pool.\n🦀  Humbly written with Rust. 🧡 \n🔗  https://github.com/robertohuertasm/cognito-user-reader
+
+ ██████╗██╗   ██╗██████╗      ██████╗██╗     ██╗
+██╔════╝██║   ██║██╔══██╗    ██╔════╝██║     ██║
+██║     ██║   ██║██████╔╝    ██║     ██║     ██║
+██║     ██║   ██║██╔══██╗    ██║     ██║     ██║
+╚██████╗╚██████╔╝██║  ██║    ╚██████╗███████╗██║
+ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝     ╚═════╝╚══════╝╚═╝  ")
+)]
 pub struct Cli {
     /// Pool id
     #[structopt()]

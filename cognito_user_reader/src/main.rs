@@ -1,3 +1,5 @@
+#![allow(clippy::non_ascii_literal)]
+
 mod cli;
 
 use cli::Cli;
@@ -10,11 +12,23 @@ use structopt::StructOpt;
 
 static THUMB: Emoji<'_, '_> = Emoji("\u{1F44D}", "");
 static TREE: Emoji<'_, '_> = Emoji("\u{1F335}", "");
+pub static ROCKET: Emoji<'_, '_> = Emoji("\u{1F680}", "");
 
 fn main() -> std::io::Result<()> {
     // get cli
     let cli: Cli = Cli::from_args();
     let current_dir = env::current_dir().unwrap();
+
+    println!(
+        "
+ ██████╗██╗   ██╗██████╗      ██████╗██╗     ██╗
+██╔════╝██║   ██║██╔══██╗    ██╔════╝██║     ██║
+██║     ██║   ██║██████╔╝    ██║     ██║     ██║
+██║     ██║   ██║██╔══██╗    ██║     ██║     ██║
+╚██████╗╚██████╔╝██║  ██║    ╚██████╗███████╗██║
+ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝     ╚═════╝╚══════╝╚═╝  \n\n{}  Let's get some users!",
+        ROCKET
+    );
 
     // prepare the reader and get the users
     let reader = UserReader::new(cli.pool_id.to_owned(), cli.region.to_owned());
