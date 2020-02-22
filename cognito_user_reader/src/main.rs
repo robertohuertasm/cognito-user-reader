@@ -19,7 +19,7 @@ fn main() -> std::io::Result<()> {
     // prepare the reader and get the users
     let reader = UserReader::new(cli.pool_id.to_owned(), cli.region.to_owned());
     let options = cli.to_options();
-    let users = reader.get_users(&options)?;
+    let users = reader.get_users(&options, true)?;
 
     // get the list of users in form of a string and the filtered users count
     let (content_file, filtered_len) = get_content(&users, &cli);

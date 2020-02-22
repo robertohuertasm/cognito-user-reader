@@ -30,7 +30,11 @@ impl UserReader {
         }
     }
 
-    pub fn get_users(&self, options: &UserReaderOptions) -> Result<Vec<User>, std::io::Error> {
+    pub fn get_users(
+        &self,
+        options: &UserReaderOptions,
+        show_messages: bool,
+    ) -> Result<Vec<User>, std::io::Error> {
         let mut users: Vec<User> = Vec::new();
         let mut pending_users: u32 = 0;
         let mut pagination_token: Option<String> = None;
@@ -55,25 +59,29 @@ impl UserReader {
                 options.show_unconfirmed_users,
             ) {
                 Ok(mut info) => {
-                    println!(
-                        "{} {} {}",
-                        ROCKET,
-                        style(format!("We got a batch of {} users", info.users.len()))
-                            .bold()
-                            .green(),
-                        ROCKET
-                    );
+                    if show_messages {
+                        println!(
+                            "{} {} {}",
+                            ROCKET,
+                            style(format!("We got a batch of {} users", info.users.len()))
+                                .bold()
+                                .green(),
+                            ROCKET
+                        );
+                    }
                     pagination_token = info.pagination_token;
                     users.append(&mut info.users);
                 }
                 Err(e) => {
-                    println!(
-                        "{} {} {}\n{}",
-                        ERROR,
-                        style("SOMETHING WENT WRONG!").bold().red(),
-                        ERROR,
-                        style(e).red(),
-                    );
+                    if show_messages {
+                        println!(
+                            "{} {} {}\n{}",
+                            ERROR,
+                            style("SOMETHING WENT WRONG!").bold().red(),
+                            ERROR,
+                            style(e).red(),
+                        );
+                    }
                 }
             }
 
