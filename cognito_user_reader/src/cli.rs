@@ -1,6 +1,6 @@
 use chrono::prelude::*;
+use cognito_user_reader_lib::UserReaderOptions;
 use console::style;
-use serde::Deserialize;
 use structopt::StructOpt;
 
 #[derive(StructOpt, PartialEq, Debug)]
@@ -38,6 +38,20 @@ pub struct Cli {
     pub created_at: Option<DateTime<Utc>>,
 }
 
+impl Cli {
+    pub const fn to_options(&self) -> UserReaderOptions {
+        UserReaderOptions {
+            limit_of_users: self.max_number_users,
+            show_unconfirmed_users: self.show_unconfirmed,
+            filtered_user_ids: &self.filtered_user_ids,
+            include_user_ids: self.include_user_ids,
+            filtered_user_emails: &self.filtered_user_emails,
+            include_user_emails: self.include_user_emails,
+            created_at: self.created_at,
+        }
+    }
+}
+
 #[allow(clippy::cast_possible_wrap)]
 fn parse_date(src: &str) -> DateTime<Utc> {
     let parsed = src
@@ -53,35 +67,4 @@ fn parse_date(src: &str) -> DateTime<Utc> {
 
     Utc.ymd(parsed[0] as i32, parsed[1], parsed[2])
         .and_hms(23, 59, 59)
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "PascalCase")]
-pub struct UserInfo {
-    pub users: Vec<User>,
-    pub pagination_token: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "PascalCase")]
-pub struct User {
-    pub username: String,
-    pub attributes: Vec<Attribute>,
-    pub user_create_date: f32,
-    pub user_last_modified_date: f32,
-    pub enabled: bool,
-    pub user_status: String,
-}
-
-impl User {
-    pub fn creation_date(&self) -> DateTime<Utc> {
-        Utc.timestamp(self.user_create_date as i64, 0)
-    }
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "PascalCase")]
-pub struct Attribute {
-    pub name: String,
-    pub value: String,
 }
