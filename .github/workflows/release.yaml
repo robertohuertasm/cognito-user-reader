@@ -73,4 +73,7 @@ jobs:
       - name: Publish to crates.io
         run: |
           cargo login ${{secrets.crates_key}}
+          cd cognito_user_reader_lib
+          cargo publish
+          cd ../cognito_user_reader
           cargo publish
