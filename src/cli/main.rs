@@ -3,16 +3,11 @@
 mod cli;
 
 use cli::Cli;
-use cognito_user_reader_lib::{User, UserReader};
+use cognito_user_reader::{User, UserReader, ROCKET, THUMB, TREE};
 use console::style;
-use console::Emoji;
 use std::env;
 use std::io::Write;
 use structopt::StructOpt;
-
-static THUMB: Emoji<'_, '_> = Emoji("\u{1F44D}", "");
-static TREE: Emoji<'_, '_> = Emoji("\u{1F335}", "");
-pub static ROCKET: Emoji<'_, '_> = Emoji("\u{1F680}", "");
 
 fn main() -> std::io::Result<()> {
     // get cli
@@ -26,7 +21,7 @@ fn main() -> std::io::Result<()> {
 ██║     ██║   ██║██████╔╝    ██║     ██║     ██║
 ██║     ██║   ██║██╔══██╗    ██║     ██║     ██║
 ╚██████╗╚██████╔╝██║  ██║    ╚██████╗███████╗██║
- ╚═════╝ ╚═════╝ ╚═╝  ╚═╝     ╚═════╝╚══════╝╚═╝  \n\n{}  Let's get some users!",
+ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝     ╚═════╝╚══════╝╚═╝  \n\n{}  Let's get some users!\n",
         ROCKET
     );
 

@@ -3,4 +3,5 @@ mod emojis;
 mod models;
 
 pub use cognito::*;
-pub use models::User;
+pub use emojis::*;
+pub use models::{Attribute, User};

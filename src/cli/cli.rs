@@ -1,5 +1,5 @@
 use chrono::prelude::*;
-use cognito_user_reader_lib::UserReaderOptions;
+use cognito_user_reader::UserReaderOptions;
 use console::style;
 use structopt::StructOpt;
 
