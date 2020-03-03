@@ -121,7 +121,9 @@ impl UserReader {
             })
             .filter(|u| {
                 if let Some(ref avoid) = options.filtered_user_emails {
-                    let is_in = avoid.contains(&u.get_email());
+                    let is_in = avoid
+                        .iter()
+                        .any(|e| e.to_lowercase() == (&u.get_email()).to_lowercase());
                     return if options.include_user_emails {
                         is_in
                     } else {
