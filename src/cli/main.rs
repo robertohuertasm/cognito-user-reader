@@ -63,7 +63,7 @@ fn get_content(users: &[User], cli: &Cli) -> (String, i32) {
     let mut filtered_len = 0;
     let content = users
         .iter()
-        .fold("createdAt, id, email, status".to_owned(), |acc, u| {
+        .fold("createdAt,id,email,status".to_owned(), |acc, u| {
             let email = u.get_email();
             let creation_date = u.creation_date();
             if cli.print_screen {
@@ -80,7 +80,7 @@ fn get_content(users: &[User], cli: &Cli) -> (String, i32) {
                 "{}\n{}",
                 acc,
                 format!(
-                    "{}, {}, {}, {}",
+                    "{},{},{},{}",
                     creation_date, u.username, &email, u.user_status
                 )
             )
