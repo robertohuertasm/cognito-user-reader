@@ -25,15 +25,20 @@ pub struct UserReaderOptions<'a> {
 impl UserReader {
     #[must_use]
     pub fn new(aws_pool_id: String) -> Self {
-        let aws_region = aws_pool_id
-            .split('_')
-            .next()
-            .expect("Impossible to get the region from the pool id")
-            .to_owned();
+        let aws_region = Self::extract_region(&aws_pool_id);
         Self {
             aws_pool_id,
             aws_region,
         }
+    }
+
+    #[must_use]
+    pub fn extract_region(pool_id: &str) -> String {
+        pool_id
+            .split('_')
+            .next()
+            .expect("Impossible to get the region from the pool id")
+            .to_owned()
     }
 
     pub fn get_users(
