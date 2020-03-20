@@ -3,7 +3,7 @@
 mod cli;
 
 use cli::Cli;
-use cognito_user_reader::{User, UserReader, ROCKET, THUMB, TREE};
+use cognito_user_reader::{users_to_csv, UserReader, ROCKET, THUMB, TREE};
 use console::style;
 use std::env;
 use std::io::Write;
@@ -31,7 +31,7 @@ fn main() -> std::io::Result<()> {
     let users = reader.get_users(&options, true)?;
 
     // get the list of users in form of a string and the filtered users count
-    let (content_file, filtered_len) = get_content(&users, &cli);
+    let (content_file, filtered_len) = users_to_csv(&users, cli.print_screen);
 
     // inform the user about how many users where found and filtered
     println!(
@@ -57,41 +57,4 @@ fn main() -> std::io::Result<()> {
     );
 
     Ok(())
-}
-
-fn get_content(users: &[User], cli: &Cli) -> (String, i32) {
-    let mut filtered_len = 0;
-
-    let content = users.iter().fold(String::new(), |acc, u| {
-        let creation_date = u.creation_date();
-        if cli.print_screen {
-            println!(
-                "{} | {} | {} | {}",
-                style(creation_date).red(),
-                style(&u.username).green(),
-                style(&u.user_status).yellow(),
-                u.attributes_values_to_string(" | "),
-            );
-        }
-        filtered_len += 1;
-        format!(
-            "{}\n{}",
-            if acc.is_empty() {
-                format!(
-                    "createdAt,username,status,{}",
-                    u.attributes_keys_to_string(",")
-                )
-            } else {
-                acc
-            },
-            format!(
-                "{},{},{},{}",
-                creation_date,
-                u.username,
-                u.user_status,
-                u.attributes_values_to_string(","),
-            )
-        )
-    });
-    (content, filtered_len)
 }
