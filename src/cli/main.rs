@@ -26,7 +26,7 @@ fn main() -> std::io::Result<()> {
     );
 
     // prepare the reader and get the users
-    let reader = UserReader::new(cli.pool_id.to_owned(), cli.region.to_owned());
+    let reader = UserReader::new(cli.pool_id.to_owned());
     let options = cli.to_options();
     let users = reader.get_users(&options, true)?;
 
@@ -61,29 +61,37 @@ fn main() -> std::io::Result<()> {
 
 fn get_content(users: &[User], cli: &Cli) -> (String, i32) {
     let mut filtered_len = 0;
-    let content = users
-        .iter()
-        .fold("createdAt,id,email,status".to_owned(), |acc, u| {
-            let email = u.get_email();
-            let creation_date = u.creation_date();
-            if cli.print_screen {
-                println!(
-                    "{} | {} | {} | {}",
-                    style(creation_date).red(),
-                    style(&u.username).green(),
-                    &email,
-                    style(&u.user_status).yellow()
-                );
-            }
-            filtered_len += 1;
-            format!(
-                "{}\n{}",
-                acc,
+
+    let content = users.iter().fold(String::new(), |acc, u| {
+        let creation_date = u.creation_date();
+        if cli.print_screen {
+            println!(
+                "{} | {} | {} | {}",
+                style(creation_date).red(),
+                style(&u.username).green(),
+                style(&u.user_status).yellow(),
+                u.attributes_values_to_string(" | "),
+            );
+        }
+        filtered_len += 1;
+        format!(
+            "{}\n{}",
+            if acc.is_empty() {
                 format!(
-                    "{},{},{},{}",
-                    creation_date, u.username, &email, u.user_status
+                    "createdAt,username,status,{}",
+                    u.attributes_keys_to_string(",")
                 )
+            } else {
+                acc
+            },
+            format!(
+                "{},{},{},{}",
+                creation_date,
+                u.username,
+                u.user_status,
+                u.attributes_values_to_string(","),
             )
-        });
+        )
+    });
     (content, filtered_len)
 }

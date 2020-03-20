@@ -20,9 +20,9 @@ pub struct Cli {
     /// Pool id
     #[structopt()]
     pub pool_id: String,
-    /// AWS region
-    #[structopt(short, long, default_value = "eu-west-1")]
-    pub region: String,
+    /// List of attributes you want to display. Email will always be included.
+    #[structopt(short = "a", long)]
+    pub attributes_to_get: Option<Vec<String>>,
     /// List of user ids that you don't want to display
     #[structopt(short = "i", long)]
     pub filtered_user_ids: Option<Vec<String>>,
@@ -52,6 +52,7 @@ pub struct Cli {
 impl Cli {
     pub const fn to_options(&self) -> UserReaderOptions {
         UserReaderOptions {
+            attributes_to_get: &self.attributes_to_get,
             limit_of_users: self.max_number_users,
             show_unconfirmed_users: self.show_unconfirmed,
             filtered_user_ids: &self.filtered_user_ids,

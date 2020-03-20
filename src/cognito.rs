@@ -12,6 +12,7 @@ pub struct UserReader {
 }
 
 pub struct UserReaderOptions<'a> {
+    pub attributes_to_get: &'a Option<Vec<String>>,
     pub limit_of_users: Option<u32>,
     pub show_unconfirmed_users: bool,
     pub filtered_user_ids: &'a Option<Vec<String>>,
@@ -23,7 +24,12 @@ pub struct UserReaderOptions<'a> {
 
 impl UserReader {
     #[must_use]
-    pub const fn new(aws_pool_id: String, aws_region: String) -> Self {
+    pub fn new(aws_pool_id: String) -> Self {
+        let aws_region = aws_pool_id
+            .split('_')
+            .next()
+            .expect("Impossible to get the region from the pool id")
+            .to_owned();
         Self {
             aws_pool_id,
             aws_region,
@@ -57,6 +63,7 @@ impl UserReader {
                 &pagination_token,
                 limit,
                 options.show_unconfirmed_users,
+                options.attributes_to_get,
             ) {
                 Ok(mut info) => {
                     if show_messages {
@@ -151,16 +158,23 @@ fn get_users_from_cognito_idp(
     pagination_token: &Option<String>,
     limit: Option<u32>,
     show_unconfirmed_users: bool,
+    attributes_to_get: &Option<Vec<String>>,
 ) -> Result<UserInfo, String> {
     let mut cmd = Command::new("aws");
     cmd.arg("cognito-idp")
         .arg("list-users")
         .arg("--user-pool-id")
         .arg(pool_id)
-        .arg("--attributes-to-get")
-        .arg("email")
         .arg("--region")
-        .arg(region);
+        .arg(region)
+        .arg("--attributes-to-get")
+        .arg("email");
+
+    if let Some(attributes) = attributes_to_get {
+        for attribute in attributes {
+            cmd.arg(attribute);
+        }
+    }
 
     if !show_unconfirmed_users {
         cmd.arg("--filter").arg("cognito:user_status = 'CONFIRMED'");

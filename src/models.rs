@@ -27,10 +27,38 @@ impl User {
     }
 
     #[must_use]
-    pub fn get_email(&self) -> String {
+    pub fn get_attribute(&self, name: &str) -> String {
         self.attributes
-            .first()
-            .map_or_else(|| "None".to_owned(), |x| x.value.clone())
+            .iter()
+            .find(|a| a.name == name)
+            .map_or_else(|| "None".to_owned(), |a| a.value.clone())
+    }
+
+    #[must_use]
+    pub fn get_email(&self) -> String {
+        self.get_attribute("email")
+    }
+
+    #[must_use]
+    pub fn attributes_values_to_string(&self, separator: &str) -> String {
+        self.attributes.iter().fold(String::new(), |acc, a| {
+            if acc.is_empty() {
+                a.value.to_string()
+            } else {
+                format!("{}{}{}", acc, separator, a.value)
+            }
+        })
+    }
+
+    #[must_use]
+    pub fn attributes_keys_to_string(&self, separator: &str) -> String {
+        self.attributes.iter().fold(String::new(), |acc, a| {
+            if acc.is_empty() {
+                a.name.to_string()
+            } else {
+                format!("{}{}{}", acc, separator, a.name)
+            }
+        })
     }
 }
 
