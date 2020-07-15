@@ -13,8 +13,14 @@ pub struct UserInfo {
 pub struct User {
     pub username: String,
     pub attributes: Vec<Attribute>,
+    #[cfg(not(feature = "awscli2"))]
     pub user_create_date: f32,
+    #[cfg(not(feature = "awscli2"))]
     pub user_last_modified_date: f32,
+    #[cfg(feature = "awscli2")]
+    pub user_create_date: String,
+    #[cfg(feature = "awscli2")]
+    pub user_last_modified_date: String,
     pub enabled: bool,
     pub user_status: String,
 }
@@ -22,8 +28,17 @@ pub struct User {
 impl User {
     #[must_use]
     #[allow(clippy::cast_possible_truncation)]
+    #[cfg(not(feature = "awscli2"))]
     pub fn creation_date(&self) -> DateTime<Utc> {
         Utc.timestamp(self.user_create_date as i64, 0)
+    }
+
+    #[must_use]
+    #[cfg(feature = "awscli2")]
+    pub fn creation_date(&self) -> DateTime<Utc> {
+        DateTime::parse_from_rfc3339(&self.user_create_date)
+            .unwrap()
+            .with_timezone(&Utc)
     }
 
     #[must_use]

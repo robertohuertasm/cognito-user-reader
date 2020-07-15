@@ -1,7 +1,7 @@
 [package]
 name = "cognito-user-reader"
 description = "Utility to retrieve all users in a specific AWS user pool"
-version = "0.10.0"
+version = "0.11.0"
 authors = ["Roberto Huertas <roberto.huertas@outlook.com>"]
 edition = "2018"
 license = "MIT"
@@ -23,6 +23,9 @@ name = "cur"
 path = "./src/cli/main.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+awscli2 = []
 
 [dependencies]
 structopt = "0.3.12"

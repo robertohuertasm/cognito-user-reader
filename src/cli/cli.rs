@@ -16,6 +16,7 @@ use structopt::StructOpt;
 ╚██████╗╚██████╔╝██║  ██║    ╚██████╗███████╗██║
  ╚═════╝ ╚═════╝ ╚═╝  ╚═╝     ╚═════╝╚══════╝╚═╝  ")
 )]
+#[allow(clippy::struct_excessive_bools)]
 pub struct Cli {
     /// Pool id
     #[structopt()]

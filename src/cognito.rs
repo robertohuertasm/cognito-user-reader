@@ -1,6 +1,6 @@
 #![allow(clippy::missing_errors_doc)]
 
-use crate::emojis::*;
+use crate::emojis::{ERROR, ROCKET};
 use crate::models::{User, UserInfo};
 use chrono::prelude::*;
 use console::style;

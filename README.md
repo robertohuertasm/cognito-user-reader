@@ -9,7 +9,9 @@ This small utility will fetch all the users and emails from a Cognito User Pool 
 You can compile it yourself:
 
 ```sh
-cargo install cognito-user-reader
+cargo install cognito-user-reader # for AWSCLI 1
+# or
+cargo install cognito-user-reader --features awscli2 # for AWSCLI 2
 ```
 
 or you can download the executable from [GitHub releases](https://github.com/robertohuertasm/cognito-user-reader/releases) and add it to your path.
@@ -18,9 +20,7 @@ or you can download the executable from [GitHub releases](https://github.com/rob
 
 You need to have previously installed [awscli](https://aws.amazon.com/cli/).
 
-```python
-pip install awscli
-```
+This crate supports both `aws-cli` versions 1 and 2. By default it will assume `aws-cli 1` so if you're using version 2 you have the `awscli2` feature available.
 
 ## Usage
 
