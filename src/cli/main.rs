@@ -30,7 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // prepare the reader and get the users
     let reader = UserReader::new(cli.pool_id.clone());
     let options = cli.to_options();
-    let users = reader.get_users(options, true).await?;
+    let users = reader.get_users(options, true).await;
 
     // get the list of users in form of a string and the filtered users count
     let (content_file, filtered_len) = users_to_csv(&users, cli.print_screen);

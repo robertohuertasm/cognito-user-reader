@@ -59,7 +59,7 @@ impl UserReader {
         &self,
         options: UserReaderOptions<'_>,
         show_messages: bool,
-    ) -> Result<Vec<UserType>, String> {
+    ) -> Vec<UserType> {
         let mut users: Vec<UserType> = Vec::new();
         let mut pending_users: i64 = 0;
         let mut limit: Option<i64> = None;
@@ -136,9 +136,7 @@ impl UserReader {
             }
         }
 
-        let users = Self::order_users(users, &options);
-
-        Ok(users)
+        Self::order_users(users, &options)
     }
 
     fn order_users(mut users: Vec<UserType>, options: &UserReaderOptions<'_>) -> Vec<UserType> {
