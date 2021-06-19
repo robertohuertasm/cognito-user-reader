@@ -9,26 +9,14 @@ This small utility will fetch all the users and emails from a Cognito User Pool 
 You can compile it yourself:
 
 ```sh
-cargo install cognito-user-reader # for AWSCLI 1
-# or
-cargo install cognito-user-reader --features awscli2 # for AWSCLI 2
+cargo install cognito-user-reader 
 ```
 
 or you can download the executable from [GitHub releases](https://github.com/robertohuertasm/cognito-user-reader/releases) and add it to your path.
 
-## Requirements
-
-You need to have previously installed [awscli](https://aws.amazon.com/cli/).
-
-This crate supports both `aws-cli` versions 1 and 2. By default it will assume `aws-cli 1` so if you're using version 2 you have the `awscli2` feature available.
-
 ## Usage
 
-Depending on how you have configured `AWS`, you may need to use something similar to `assume-role` before using `cur` in order to access the data:
-
-```bash
-assume-role your-env
-```
+Depending on how you have configured `AWS`, you may need to set your credentials in your terminal.
 
 Then, just execute:
 

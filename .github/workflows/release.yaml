@@ -12,38 +12,19 @@ jobs:
       matrix:
         rust: [stable]
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        aws: [awscli1, awscli2]
         include:
           - os: macOS-latest
             rust: stable
             artifact_name: cur
-            aws: awscli1
-            release_name: cur_osx_awscli1.zip
+            release_name: cur_osx.zip
           - os: windows-latest
             rust: stable
             artifact_name: cur.exe
-            aws: awscli1
-            release_name: cur_windows_awscli1.zip
+            release_name: cur_windows.zip
           - os: ubuntu-latest
             rust: stable
             artifact_name: cur
-            aws: awscli1
-            release_name: cur_linux_awscli1.zip
-          - os: macOS-latest
-            rust: stable
-            artifact_name: cur
-            aws: awscli2
-            release_name: cur_osx_awscli2.zip
-          - os: windows-latest
-            rust: stable
-            artifact_name: cur.exe
-            aws: awscli2
-            release_name: cur_windows_awscli2.zip
-          - os: ubuntu-latest
-            rust: stable
-            artifact_name: cur
-            aws: awscli2
-            release_name: cur_linux_awscli2.zip
+            release_name: cur_linux.zip
     steps:
       - name: Setup Rust
         uses: hecrj/setup-rust-action@master
@@ -54,12 +35,7 @@ jobs:
       - name: Build the crate for release
         shell: bash
         run: |
-          if [[ "${{matrix.aws}}" == "awscli1" ]]
-          then
-            cargo build --release
-          else
-            cargo build --release --features awscli2
-          fi
+          cargo build --release
           ls -la target/release
       - name: Applying upx
         uses: svenstaro/upx-action@v1-release

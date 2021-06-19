@@ -1,85 +1,58 @@
 use chrono::prelude::*;
-use serde::Deserialize;
 
-#[derive(Debug, Deserialize, Clone)]
-#[serde(rename_all = "PascalCase")]
-pub struct UserInfo {
-    pub users: Vec<User>,
-    pub pagination_token: Option<String>,
+pub trait UserTypeExt {
+    fn creation_date(&self) -> DateTime<Utc>;
+    fn get_attribute(&self, name: &str) -> String;
+    fn get_email(&self) -> String;
+    fn attributes_values_to_string(&self, separator: &str) -> String;
+    fn attributes_keys_to_string(&self, separator: &str) -> String;
 }
 
-#[derive(Debug, Deserialize, Clone)]
-#[serde(rename_all = "PascalCase")]
-pub struct User {
-    pub username: String,
-    pub attributes: Vec<Attribute>,
-    #[cfg(not(feature = "awscli2"))]
-    pub user_create_date: f32,
-    #[cfg(not(feature = "awscli2"))]
-    pub user_last_modified_date: f32,
-    #[cfg(feature = "awscli2")]
-    pub user_create_date: String,
-    #[cfg(feature = "awscli2")]
-    pub user_last_modified_date: String,
-    pub enabled: bool,
-    pub user_status: String,
-}
-
-impl User {
-    #[must_use]
-    #[allow(clippy::cast_possible_truncation)]
-    #[cfg(not(feature = "awscli2"))]
-    pub fn creation_date(&self) -> DateTime<Utc> {
-        Utc.timestamp(self.user_create_date as i64, 0)
-    }
-
-    #[must_use]
-    #[cfg(feature = "awscli2")]
-    pub fn creation_date(&self) -> DateTime<Utc> {
-        DateTime::parse_from_rfc3339(&self.user_create_date)
-            .unwrap()
-            .with_timezone(&Utc)
-    }
-
-    #[must_use]
-    pub fn get_attribute(&self, name: &str) -> String {
-        self.attributes
-            .iter()
-            .find(|a| a.name == name)
-            .map_or_else(|| "None".to_owned(), |a| a.value.clone())
-    }
-
-    #[must_use]
-    pub fn get_email(&self) -> String {
+impl UserTypeExt for rusoto_cognito_idp::UserType {
+    fn get_email(&self) -> String {
         self.get_attribute("email")
     }
 
-    #[must_use]
-    pub fn attributes_values_to_string(&self, separator: &str) -> String {
-        self.attributes.iter().fold(String::new(), |acc, a| {
-            if acc.is_empty() {
-                a.value.to_string()
-            } else {
-                format!("{}{}{}", acc, separator, a.value)
-            }
+    fn get_attribute(&self, name: &str) -> String {
+        self.attributes.as_ref().map_or_else(String::new, |attrs| {
+            attrs
+                .iter()
+                .find(|a| a.name == name)
+                .map_or_else(|| "None".to_owned(), |a| a.value.clone().unwrap())
         })
     }
 
-    #[must_use]
-    pub fn attributes_keys_to_string(&self, separator: &str) -> String {
-        self.attributes.iter().fold(String::new(), |acc, a| {
-            if acc.is_empty() {
-                a.name.to_string()
-            } else {
-                format!("{}{}{}", acc, separator, a.name)
-            }
+    #[allow(clippy::cast_possible_truncation)]
+    fn creation_date(&self) -> DateTime<Utc> {
+        Utc.timestamp(
+            self.user_create_date
+                .expect("No creation date for this user") as i64,
+            0,
+        )
+    }
+
+    fn attributes_values_to_string(&self, separator: &str) -> String {
+        self.attributes.as_ref().map_or_else(String::new, |attrs| {
+            attrs.iter().fold(String::new(), |acc, a| {
+                let value = a.value.as_deref().unwrap_or("No Value");
+                if acc.is_empty() {
+                    value.to_string()
+                } else {
+                    format!("{}{}{}", acc, separator, value)
+                }
+            })
         })
     }
-}
 
-#[derive(Debug, Deserialize, Clone)]
-#[serde(rename_all = "PascalCase")]
-pub struct Attribute {
-    pub name: String,
-    pub value: String,
+    fn attributes_keys_to_string(&self, separator: &str) -> String {
+        self.attributes.as_ref().map_or_else(String::new, |attrs| {
+            attrs.iter().fold(String::new(), |acc, a| {
+                if acc.is_empty() {
+                    a.name.to_string()
+                } else {
+                    format!("{}{}{}", acc, separator, a.name)
+                }
+            })
+        })
+    }
 }

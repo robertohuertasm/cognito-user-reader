@@ -1,19 +1,28 @@
 #![allow(clippy::missing_errors_doc)]
 
-use crate::emojis::{ERROR, ROCKET};
-use crate::models::{User, UserInfo};
+use crate::{
+    emojis::{ERROR, ROCKET},
+    UserTypeExt,
+};
+
 use chrono::prelude::*;
 use console::style;
-use std::process::Command;
+use rusoto_cognito_idp::{
+    CognitoIdentityProvider, CognitoIdentityProviderClient, ListUsersRequest, ListUsersResponse,
+    UserType,
+};
+use rusoto_core::Region;
+use std::str::FromStr;
 
 pub struct UserReader {
     pub aws_pool_id: String,
     pub aws_region: String,
+    cognito_provider: CognitoIdentityProviderClient,
 }
 
 pub struct UserReaderOptions<'a> {
     pub attributes_to_get: &'a Option<Vec<String>>,
-    pub limit_of_users: Option<u32>,
+    pub limit_of_users: Option<i64>,
     pub show_unconfirmed_users: bool,
     pub filtered_user_ids: &'a Option<Vec<String>>,
     pub include_user_ids: bool,
@@ -25,10 +34,15 @@ pub struct UserReaderOptions<'a> {
 impl UserReader {
     #[must_use]
     pub fn new(aws_pool_id: String) -> Self {
-        let aws_region = Self::extract_region(&aws_pool_id);
+        let raw_aws_region = Self::extract_region(&aws_pool_id);
+        let aws_region: Region =
+            Region::from_str(&raw_aws_region).expect("Wrong format for this pool id.");
+        let cognito_provider = CognitoIdentityProviderClient::new(aws_region);
+
         Self {
             aws_pool_id,
-            aws_region,
+            aws_region: raw_aws_region,
+            cognito_provider,
         }
     }
 
@@ -41,15 +55,14 @@ impl UserReader {
             .to_owned()
     }
 
-    pub fn get_users(
+    pub async fn get_users(
         &self,
-        options: &UserReaderOptions,
+        options: UserReaderOptions<'_>,
         show_messages: bool,
-    ) -> Result<Vec<User>, std::io::Error> {
-        let mut users: Vec<User> = Vec::new();
-        let mut pending_users: u32 = 0;
-        let mut pagination_token: Option<String> = None;
-        let mut limit: Option<u32> = None;
+    ) -> Result<Vec<UserType>, String> {
+        let mut users: Vec<UserType> = Vec::new();
+        let mut pending_users: i64 = 0;
+        let mut limit: Option<i64> = None;
 
         if let Some(max_users) = options.limit_of_users {
             if max_users <= 60 {
@@ -60,29 +73,37 @@ impl UserReader {
             }
         }
 
+        let mut req = ListUsersRequest {
+            user_pool_id: self.aws_pool_id.clone(),
+            attributes_to_get: options.attributes_to_get.clone(),
+            filter: if options.show_unconfirmed_users {
+                None
+            } else {
+                Some("cognito:user_status = 'CONFIRMED'".to_string())
+            },
+            limit,
+            pagination_token: None,
+        };
+
         // loop until we get all the users that we want
         loop {
-            match get_users_from_cognito_idp(
-                &self.aws_pool_id,
-                &self.aws_region,
-                &pagination_token,
-                limit,
-                options.show_unconfirmed_users,
-                options.attributes_to_get,
-            ) {
-                Ok(mut info) => {
+            match self.cognito_provider.list_users(req.clone()).await {
+                Ok(ListUsersResponse {
+                    pagination_token,
+                    users: Some(mut response_users),
+                }) => {
                     if show_messages {
                         println!(
                             "{} {} {}",
                             ROCKET,
-                            style(format!("We got a batch of {} users", info.users.len()))
+                            style(format!("We got a batch of {} users", response_users.len()))
                                 .bold()
                                 .green(),
                             ROCKET
                         );
                     }
-                    pagination_token = info.pagination_token;
-                    users.append(&mut info.users);
+                    req.pagination_token = pagination_token;
+                    users.append(&mut response_users);
                 }
                 Err(e) => {
                     if show_messages {
@@ -95,34 +116,46 @@ impl UserReader {
                         );
                     }
                 }
+                Ok(_x) => (),
             }
 
-            if pending_users == 0 && limit.is_some() {
+            if pending_users == 0 && req.limit.is_some() {
                 break;
             }
 
             if pending_users <= 60 {
-                limit = Some(pending_users);
+                req.limit = Some(pending_users);
                 pending_users = 0;
             } else {
-                limit = Some(60);
+                req.limit = Some(60);
                 pending_users -= 60;
             }
 
-            if pagination_token.is_none() {
+            if req.pagination_token.is_none() {
                 break;
             }
         }
 
+        let users = Self::order_users(users, &options);
+
+        Ok(users)
+    }
+
+    fn order_users(mut users: Vec<UserType>, options: &UserReaderOptions<'_>) -> Vec<UserType> {
         // order by creation date
-        users.sort_by(|a, b| a.user_create_date.partial_cmp(&b.user_create_date).unwrap());
+        users.sort_by(|a, b| {
+            a.user_create_date
+                .partial_cmp(&b.user_create_date)
+                .unwrap_or(std::cmp::Ordering::Less)
+        });
 
         // apply filters
-        users = users
+        users
             .into_iter()
             .filter(|u| {
                 if let Some(ref avoid) = options.filtered_user_ids {
-                    let is_in = avoid.contains(&u.username);
+                    let username = u.username.as_deref().unwrap_or("");
+                    let is_in = avoid.contains(&username.to_string());
                     return if options.include_user_ids {
                         is_in
                     } else {
@@ -146,28 +179,29 @@ impl UserReader {
             })
             .filter(|u| {
                 if let Some(created_at) = options.created_at {
-                    let duration = u.creation_date().signed_duration_since(created_at);
+                    let duration = &u.creation_date().signed_duration_since(created_at);
                     return duration.num_days() >= 0;
                 }
                 true
             })
-            .collect();
-        // return the list
-        Ok(users)
+            .collect()
     }
 }
+
 #[must_use]
-pub fn users_to_csv(users: &[User], print_screen: bool) -> (String, i32) {
+pub fn users_to_csv(users: &[UserType], print_screen: bool) -> (String, i32) {
     let mut filtered_len = 0;
 
     let content = users.iter().fold(String::new(), |acc, u| {
         let creation_date = u.creation_date();
+        let username = u.username.as_deref().unwrap_or("No username");
+        let user_status = u.user_status.as_deref().unwrap_or("No user status");
         if print_screen {
             println!(
                 "{} | {} | {} | {}",
                 style(creation_date).red(),
-                style(&u.username).green(),
-                style(&u.user_status).yellow(),
+                style(username).green(),
+                style(user_status).yellow(),
                 u.attributes_values_to_string(" | "),
             );
         }
@@ -185,62 +219,11 @@ pub fn users_to_csv(users: &[User], print_screen: bool) -> (String, i32) {
             format!(
                 "{},{},{},{}",
                 creation_date,
-                u.username,
-                u.user_status,
+                username,
+                user_status,
                 u.attributes_values_to_string(","),
             )
         )
     });
     (content, filtered_len)
-}
-
-fn get_users_from_cognito_idp(
-    pool_id: &str,
-    region: &str,
-    pagination_token: &Option<String>,
-    limit: Option<u32>,
-    show_unconfirmed_users: bool,
-    attributes_to_get: &Option<Vec<String>>,
-) -> Result<UserInfo, String> {
-    let mut cmd = Command::new("aws");
-    cmd.arg("cognito-idp")
-        .arg("list-users")
-        .arg("--user-pool-id")
-        .arg(pool_id)
-        .arg("--region")
-        .arg(region)
-        .arg("--attributes-to-get")
-        .arg("email");
-
-    if let Some(attributes) = attributes_to_get {
-        for attribute in attributes {
-            cmd.arg(attribute);
-        }
-    }
-
-    if !show_unconfirmed_users {
-        cmd.arg("--filter").arg("cognito:user_status = 'CONFIRMED'");
-    }
-
-    if let Some(pt) = pagination_token {
-        cmd.arg("--pagination-token").arg(pt);
-    }
-
-    if let Some(l) = limit {
-        if l > 60 {
-            return Err("The limit cannot be greater than 60".to_string());
-        }
-        cmd.arg("--limit").arg(l.to_string());
-    }
-
-    let result = cmd
-        .output()
-        .map_err(|e| format!("Error calling aws {}", e))?;
-
-    if result.status.success() {
-        serde_json::from_slice(&result.stdout)
-            .map_err(|e| format!("Error deserializing users: {}", e))
-    } else {
-        Err(std::str::from_utf8(&result.stderr).unwrap().into())
-    }
 }

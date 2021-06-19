@@ -4,4 +4,5 @@ mod models;
 
 pub use cognito::*;
 pub use emojis::*;
-pub use models::{Attribute, User};
+pub use models::UserTypeExt;
+pub use rusoto_cognito_idp::{AttributeType, UserType};

@@ -16,7 +16,7 @@ use structopt::StructOpt;
 ╚██████╗╚██████╔╝██║  ██║    ╚██████╗███████╗██║
  ╚═════╝ ╚═════╝ ╚═╝  ╚═╝     ╚═════╝╚══════╝╚═╝  ")
 )]
-#[allow(clippy::struct_excessive_bools)]
+#[allow(clippy::struct_excessive_bools, clippy::empty_line_after_outer_attr)]
 pub struct Cli {
     /// Pool id
     #[structopt()]
@@ -38,7 +38,7 @@ pub struct Cli {
     pub include_user_emails: bool,
     /// Max number of users returned
     #[structopt(short = "x", long)]
-    pub max_number_users: Option<u32>,
+    pub max_number_users: Option<i64>,
     /// Output the result to the terminal
     #[structopt(short, long)]
     pub print_screen: bool,
@@ -75,7 +75,7 @@ fn parse_date(src: &str) -> DateTime<Utc> {
     if parsed.len() != 3 {
         let error_msg = "Review the creation date paramater. Use YYYY-MM-DD. eg. 2020-02-23";
         println!("{}", style(error_msg).red());
-        panic!(error_msg);
+        panic!("{}", error_msg);
     }
 
     Utc.ymd(parsed[0] as i32, parsed[1], parsed[2])
