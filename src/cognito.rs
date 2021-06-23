@@ -116,6 +116,7 @@ impl UserReader {
                             style(e).red(),
                         );
                     }
+                    req.pagination_token = None;
                 }
                 Ok(_x) => (),
             }
