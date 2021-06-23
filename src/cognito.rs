@@ -65,6 +65,7 @@ impl UserReader {
         let mut limit: Option<i64> = None;
 
         if let Some(max_users) = options.limit_of_users {
+            println!("------ max users {}", max_users);
             if max_users <= 60 {
                 limit = Some(max_users);
             } else {
@@ -119,16 +120,16 @@ impl UserReader {
                 Ok(_x) => (),
             }
 
-            if pending_users == 0 && req.limit.is_some() {
-                break;
-            }
-
-            if pending_users <= 60 {
-                req.limit = Some(pending_users);
-                pending_users = 0;
-            } else {
-                req.limit = Some(60);
-                pending_users -= 60;
+            if req.limit.is_some() {
+                if pending_users == 0 {
+                    break;
+                } else if pending_users <= 60 {
+                    req.limit = Some(pending_users);
+                    pending_users = 0;
+                } else {
+                    req.limit = Some(60);
+                    pending_users -= 60;
+                }
             }
 
             if req.pagination_token.is_none() {
